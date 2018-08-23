@@ -32,5 +32,6 @@ npm packages:
   -moment
   -spotify
   -omdb
+  -dotenv
   
 created by Lucky Fang
