@@ -1,15 +1,137 @@
 require("dotenv").config();
 
-
 var keys = require("./keys.js");
 
-var Spotify =require('node-spotify-api');
+var arg = process.argv;
 
-var spotify = new Spotify(keys.spotify);
+var fs = require("fs");
 
-var spotifyThis = function(){
+var moment = require('moment');
+
+var liri = {
+
+	// this will take data from a text file and then calls the functionality (spotify in this case) as defined in the file
+	says() {
+		console.log("=============");
+		console.log("says function");
+		console.log("=============");
+		fs.readFile("random.txt", "utf-8", function(error, data) {
+			if (error) {
+				return console.log(error);
+			}
+			console.log("Reading stored file and redirecting to the music function");
+			var command = data.split(",");
+			arg[2] = command[0];
+			arg[3] = command[1];
+			liri.runtime();
+		})
+  },
+  movieThis(){
+
+    // Include the request npm package (Don't forget to run "npm install request" in this folder first!)
+    var request = require("request");
+
+    // Store all of the arguments in an array
+    var nodeArgs = process.argv;
+
+    // Create an empty variable for holding the movie name
+    var movieName = "";
+
+    // Loop through all the words in the node argument
+    for (var i = 3; i < nodeArgs.length; i++) {
+
+    if (i > 3 && i < nodeArgs.length) {
+
+        movieName = movieName + "+" + nodeArgs[i];
+
+    }
+
+    else {
+
+        movieName += nodeArgs[i];
+
+    }
+    }
+    if (movieName===""){
+        movieName="mr nobody"
+    }
+
+    // Then run a request to the OMDB API with the movie specified
+    var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
+
     
+    console.log(queryUrl);
+
+        request(queryUrl, function(error, response, body) {
+           
+
+        // If the request is successful
+        if (!error && response.statusCode === 200) {
+
+            // Parse the body of the site and recover just the imdbRating
+            
+            var info = JSON.parse(body);
+            console.log("Movie Title: "+ info.Title)
+            console.log("Release Year: " + info.Year);
+            console.log("IMDB Rating: "+ info.Rated);
+            console.log("Rotten Tomatoes Rating: "+info.Ratings[1].Value);
+            console.log("Country: "+info.Country);
+            console.log("Language: "+info.Language);
+            console.log("Plot: "+info.Plot);
+            console.log("Actors: "+info.Actors);
+        }
+        });
+  },
+  concertThis(){
+
+    var request = require("request");
+
+    // Store all of the arguments in an array
+    var path = process.argv;
+
+    // Create an empty variable 
+    var band = "";
+
+        // Loop through all the words in the node argument
+        // And do a little for-loop magic to handle the inclusion of "+"s
+        for (var i = 3; i < path.length; i++) {
+
+            if (i > 3 && i < path.length) {
+
+                band = band + "+" + path[i];
+
+            }
+
+            else {
+
+               band += path[i];
+
+            }
+        }
+
+
+    queryUrl="https://rest.bandsintown.com/artists/" + band + "/events?app_id=codingbootcamp";
+
+    console.log(queryUrl)
+
+    request(queryUrl, function(error, response, body) {
+
+        // If the request is successful
+
+        if (!error && response.statusCode === 200) {
+            var info = JSON.parse(body);
+            console.log(info[0].venue.name)
+            console.log(info[0].venue.city);
+            console.log(moment(info[0].datetime).format("MM/DD/YYYY"));}
+        else{
+            console.log(error)
+        }
+    })
+  },
+  spotifyThis(){
+    var Spotify =require('node-spotify-api');
     var song = "";
+    var spotify =new Spotify(keys.spotify);
 
     for (var i =3; i <process.argv.length; i++){
         if(i > 3 && i < process.argv.length){
@@ -20,7 +142,8 @@ var spotifyThis = function(){
         }
     }
     if (song===""){
-        console.log("please enter a song name")
+        song="The Sign"
+        console.log(song)
     }
     spotify.search({type:'track',query:song},function(err,data){
         
@@ -33,13 +156,24 @@ var spotifyThis = function(){
             console.log("Preview: " + data.tracks.items[0].album.external_urls.spotify);
         }
     })
-}
+  },
 
-if(process.argv[2]==="spotify-this-song"){
-    spotifyThis();
-}
 
-// concert-this 
-//   spotify-this-song
-// movie-this
-// do-what-it-says
+
+  runtime() {
+		if (arg[2] === "concert-this") {
+			liri.concertThis();
+		} else if (arg[2] === "spotify-this-song") {
+			liri.spotifyThis();
+		} else if (arg[2] === "movie-this") {
+			liri.movieThis();
+		} else if (arg[2] === "do-what-it-says") {
+			liri.says();
+		}
+	},
+
+
+
+
+}
+liri.runtime();
